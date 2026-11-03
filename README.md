@@ -66,6 +66,9 @@ int main(void)
 - Pass the correct byte size for every element.
 - `get` and `pop` copy element data into the provided `store`; make sure it has enough space.
 - Do not use a list after calling `destroylist`.
+  
+**##Additional NOTES**
+the lib file is compiled for windows but feel free to compile it for your OS using the src/list.c file
 
 ## License
 
