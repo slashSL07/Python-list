@@ -1,6 +1,4 @@
 #include "list.h"
-#include <stdbool.h>
-#include <stdio.h>
 
 list initlist(BYTES *bytes_arr, size_t *b_sizes, int elements)
 {
@@ -249,11 +247,89 @@ bool del(list *lis, int index)
 }
 bool add(list *lis, BYTES *bytes_arr, size_t *b_sizes, int elements, int index)
 {
+  // checks if list is destroyed
   if (lis->len == -1)
     return false;
+  // index check
   if (index >= lis->offset || index < 0)
     return false;
 
+  size_t size_sum = 0;
+  for (int i = 0; i < elements; i++)
+  {
+    size_sum += b_sizes[i];
+  }
+  if (lis->max_len > (size_sum + lis->len) && lis->maxoffset > lis->offset + elements)
+  {
+
+    // set bytes
+    BYTES t_bytes = malloc(size_sum + lis->len);
+    memcpy(t_bytes, lis->bytes, lis->byte_offset[index]);
+    memcpy(t_bytes + lis->byte_offset[index], bytes_arr[0], b_sizes[0]);
+    for (int i = 1; i < elements; i++)
+    {
+      memcpy(t_bytes + lis->byte_offset[index] + b_sizes[i - 1], bytes_arr[i], b_sizes[i]);
+    }
+    memcpy(t_bytes + lis->byte_offset[index] + size_sum, lis->bytes + lis->byte_offset[index],
+           lis->len - lis->byte_offset[index]);
+    memcpy(lis->bytes, t_bytes, lis->len + size_sum);
+
+    free(t_bytes);
+
+    // set size
+    size_t *tempsize = malloc((lis->offset + elements + 1) * sizeof(size_t));
+    memcpy(tempsize, lis->byte_offset, (index + 1) * sizeof(size_t));
+    for (int j = 1; j <= elements; j++)
+    {
+
+      tempsize[index + j] = tempsize[(index + j - 1)] + b_sizes[j - 1];
+    }
+    for (int k = index + 1; k <= lis->offset; k++)
+    {
+      tempsize[k + elements] =
+          tempsize[k + elements - 1] + (lis->byte_offset[k] - lis->byte_offset[k - 1]);
+    }
+    memcpy(lis->byte_offset, tempsize, (lis->offset + elements + 1) * sizeof(size_t));
+    free(tempsize);
+  }
+  else
+  {
+    // set bytes
+    BYTES t_bytes = malloc(size_sum + lis->len);
+    memcpy(t_bytes, lis->bytes, lis->byte_offset[index]);
+    memcpy(t_bytes + lis->byte_offset[index], bytes_arr[0], b_sizes[0]);
+    for (int i = 1; i < elements; i++)
+    {
+      memcpy(t_bytes + lis->byte_offset[index] + b_sizes[i - 1], bytes_arr[i], b_sizes[i]);
+    }
+    memcpy(t_bytes + lis->byte_offset[index] + size_sum, lis->bytes + lis->byte_offset[index],
+           lis->len - lis->byte_offset[index]);
+    lis->bytes = realloc(lis->bytes, 2 * (lis->max_len + size_sum));
+    memcpy(lis->bytes, t_bytes, lis->len + size_sum);
+
+    free(t_bytes);
+
+    // set size
+    size_t *tempsize = malloc((lis->offset + elements + 1) * sizeof(size_t));
+    memcpy(tempsize, lis->byte_offset, (index + 1) * sizeof(size_t));
+    for (int j = 1; j <= elements; j++)
+    {
+
+      tempsize[index + j] = tempsize[(index + j - 1)] + b_sizes[j - 1];
+    }
+    for (int k = index + 1; k <= lis->offset; k++)
+    {
+      tempsize[k + elements] =
+          tempsize[k + elements - 1] + (lis->byte_offset[k] - lis->byte_offset[k - 1]);
+    }
+    lis->byte_offset = realloc(lis->byte_offset, 2 * (lis->maxoffset + elements) * sizeof(size_t));
+    memcpy(lis->byte_offset, tempsize, (lis->offset + elements + 1) * sizeof(size_t));
+    free(tempsize);
+    lis->max_len = 2 * (lis->max_len + size_sum);
+    lis->maxoffset = 2 * (lis->maxoffset + elements);
+  }
+  lis->len += size_sum;
+  lis->offset += elements;
   return true;
 }
 
@@ -267,54 +343,4 @@ bool destroylist(list *lis)
   lis->byte_offset = NULL;
   lis->bytes = NULL;
   return true;
-}
-int main()
-{
-  int a = 15;
-  char *c = "madarchod";
-  char *b = " muji ko baan";
-  int d[5] = {1, 2, 3, 1, 2};
-  BYTES items[] = {(BYTES)&a, (BYTES)c, (BYTES)b, (BYTES)d};
-  size_t sizes[] = {sizeof(a), strlen(c) + 1, strlen(b) + 1, sizeof(d)};
-  list nigger = initlist(items, sizes, 4);
-
-  /*int val = 17271;
-  BYTES pusher[] = {(BYTES)&val};
-  size_t pushsize[] = {sizeof(val)};
-  push(&nigger, pusher, pushsize, 1);
-  pop(&nigger, &val);*/
-  char *n = "madarmujichodbehinkilosahahsjhat";
-
-  char aab[64];
-  // delete(&nigger, 2);
-  set(&nigger, (BYTES)n, (strlen(n) + 1), 1);
-  get(&nigger, 1, &aab);
-  printf("%s \n ", aab);
-  int q[5] = {0};
-  /*push(&nigger, pusher, pushsize, 1);
-  val = 126161;
-  pusher[0] = (BYTES)&val;
-  push(&nigger, pusher, pushsize, 1);
-  val = 91231;
-  pusher[0] = (BYTES)&val;
-  push(&nigger, pusher, pushsize, 1);
-  val = 12331;
-  pusher[0] = (BYTES)&val;
-  push(&nigger, pusher, pushsize, 1);
-
-  val = 98031;
-  pusher[0] = (BYTES)&val;
-  push(&nigger, pusher, pushsize, 1);
-
-  for (int i = 0; i <= nigger.offset; i++)
-  {
-    printf("%lld, ", nigger.byte_offset[i]);
-  }*/
-  printf("\n");
-  pop(&nigger, &q);
-  destroylist(&nigger);
-  printf("expected 1,2,3 got %d, %d, %d \n", q[0], q[1], q[2]); // expected OP: 1,2,3
-  char ja[13] = {};
-  pop(&nigger, &ja);
-  printf("expected null got: (%s)", ja); // expected OP: nothing(return;)
 }
